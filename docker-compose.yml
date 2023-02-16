@@ -1,26 +1,31 @@
-version: "3.8"
-
+version: '3.1'
 services:
-  db:
-    image: postgres:13.2-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_PASSWORD: example
-    container_name: db_redmine
+  postgres:
+    image: postgres:latest
+    restart: always
+    networks:
+      - redmine
     volumes:
-      - database:/var/lib/postgresql/data
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      - 'POSTGRES_PASSWORD=password'
+      - 'POSTGRES_DB=redmine'
   redmine:
-    image: redmine:4.1-alpine
-    environment:
-      - REDMINE_DB_POSTGRES=db
-      - REDMINE_DB_PASSWORD=example
-    ports:
-      - 9999:3000
+    image: redmine:latest
+    restart: always
+    networks:
+      - redmine
     volumes:
-      - files:/usr/src/redmine/files
-    depends_on:
-      - db
-
+      - redmine-data:/usr/src/redmine/files
+    ports:
+      - 80:3000
+    environment:
+      - 'REDMINE_DB_POSTGRES=postgres'
+      - 'REDMINE_DB_DATABASE=redmine'
+      - 'REDMINE_DB_PASSWORD=password'
 volumes:
-  database:
-  files:
+  postgres-data:
+  redmine-data:
+networks:
+  redmine:
+    driver: bridge
